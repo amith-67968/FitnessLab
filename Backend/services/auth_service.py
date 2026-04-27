@@ -15,13 +15,17 @@ logger = logging.getLogger(__name__)
 
 def _get_config() -> tuple[str, str]:
     """Return (supabase_url, supabase_anon_key) from environment."""
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_ANON_KEY")
+    url = os.getenv("SUPABASE_URL", "")
+    key = os.getenv("SUPABASE_ANON_KEY", "")
     if not url or not key:
         raise RuntimeError(
             "SUPABASE_URL and SUPABASE_ANON_KEY must be set in .env"
         )
-    return url, key
+    if not url.startswith(("http://", "https://")):
+        raise RuntimeError(
+            f"SUPABASE_URL must start with http:// or https:// (got: {url!r})"
+        )
+    return url.rstrip("/"), key
 
 
 def _auth_headers(anon_key: str, access_token: str | None = None) -> dict[str, str]:
@@ -47,12 +51,16 @@ async def sign_up(email: str, password: str) -> dict:
     url, key = _get_config()
     endpoint = f"{url}/auth/v1/signup"
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.post(
-            endpoint,
-            headers=_auth_headers(key),
-            json={"email": email, "password": password},
-        )
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                endpoint,
+                headers=_auth_headers(key),
+                json={"email": email, "password": password},
+            )
+    except httpx.HTTPError as exc:
+        logger.exception("Supabase signup request failed")
+        raise RuntimeError(f"Could not reach Supabase: {exc}") from exc
 
     data = resp.json()
     if resp.status_code >= 400:
@@ -72,12 +80,16 @@ async def sign_in(email: str, password: str) -> dict:
     url, key = _get_config()
     endpoint = f"{url}/auth/v1/token?grant_type=password"
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.post(
-            endpoint,
-            headers=_auth_headers(key),
-            json={"email": email, "password": password},
-        )
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                endpoint,
+                headers=_auth_headers(key),
+                json={"email": email, "password": password},
+            )
+    except httpx.HTTPError as exc:
+        logger.exception("Supabase sign-in request failed")
+        raise RuntimeError(f"Could not reach Supabase: {exc}") from exc
 
     data = resp.json()
     if resp.status_code >= 400:
@@ -97,11 +109,15 @@ async def get_user(access_token: str) -> dict:
     url, key = _get_config()
     endpoint = f"{url}/auth/v1/user"
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.get(
-            endpoint,
-            headers=_auth_headers(key, access_token),
-        )
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(
+                endpoint,
+                headers=_auth_headers(key, access_token),
+            )
+    except httpx.HTTPError as exc:
+        logger.exception("Supabase get-user request failed")
+        raise RuntimeError(f"Could not reach Supabase: {exc}") from exc
 
     data = resp.json()
     if resp.status_code >= 400:
@@ -118,13 +134,18 @@ async def sign_out(access_token: str) -> None:
     url, key = _get_config()
     endpoint = f"{url}/auth/v1/logout"
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.post(
-            endpoint,
-            headers=_auth_headers(key, access_token),
-        )
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                endpoint,
+                headers=_auth_headers(key, access_token),
+            )
+    except httpx.HTTPError as exc:
+        logger.exception("Supabase logout request failed")
+        raise RuntimeError(f"Could not reach Supabase: {exc}") from exc
 
     if resp.status_code >= 400:
         data = resp.json()
         error_msg = data.get("error_description") or data.get("msg") or data.get("message", "Logout failed")
         raise ValueError(error_msg)
+
