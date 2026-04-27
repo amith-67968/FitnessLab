@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Fitness Planner — Personalized BMI & Workout Plans",
+  title: "FitnessLab - Personalized BMI & Workout Plans",
   description:
-    "Get a personalized fitness plan based on your BMI, nutrition intake, and body goals. AI-powered diet plans, workout routines, and health insights.",
+    "Get a formula-based fitness plan with BMI analysis, nutrition targets, and structured workout routines.",
 };
 
 export default function RootLayout({

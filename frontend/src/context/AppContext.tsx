@@ -1,61 +1,71 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useSyncExternalStore, ReactNode } from "react";
+import type { AnalyzeResponse } from "@/services/api";
 
-/* ── Types ── */
-export interface AnalysisResult {
-  bmi?: number;
-  category?: string;
-  ai_plan?: {
-    goal?: string;
-    diet_plan?: string;
-    workout_plan?: string;
-    timeline?: string[];
-  };
-  nutrition_feedback?: string[];
-  images?: string[];
+interface StoredState {
+  isLoggedIn: boolean;
+  userEmail: string;
+  accessToken: string;
+  analysisResult: AnalyzeResponse | null;
 }
 
 interface AppState {
   isLoggedIn: boolean;
   userEmail: string;
   accessToken: string;
-  analysisResult: AnalysisResult | null;
+  analysisResult: AnalyzeResponse | null;
   setLoggedIn: (email: string, token: string) => void;
   logout: () => void;
-  setAnalysisResult: (data: AnalysisResult) => void;
+  setAnalysisResult: (data: AnalyzeResponse) => void;
   clearResult: () => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
 
-/* ── Provider ── */
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [accessToken, setAccessToken] = useState("");
-  const [analysisResult, setAnalysisResultState] = useState<AnalysisResult | null>(null);
-  const [hydrated, setHydrated] = useState(false);
+function readStoredState(): StoredState {
+  if (typeof window === "undefined") {
+    return {
+      isLoggedIn: false,
+      userEmail: "",
+      accessToken: "",
+      analysisResult: null,
+    };
+  }
 
-  // Hydrate from localStorage on mount
-  useEffect(() => {
+  const storedEmail = localStorage.getItem("fitnesslab_email") || "";
+  const storedToken = localStorage.getItem("fitnesslab_token") || "";
+  const storedResult = localStorage.getItem("fitnesslab_result");
+  let analysisResult: AnalyzeResponse | null = null;
+
+  if (storedResult) {
     try {
-      const storedEmail = localStorage.getItem("fitnesslab_email");
-      const storedToken = localStorage.getItem("fitnesslab_token");
-      const storedResult = localStorage.getItem("fitnesslab_result");
-      if (storedEmail && storedToken) {
-        setIsLoggedIn(true);
-        setUserEmail(storedEmail);
-        setAccessToken(storedToken);
-      }
-      if (storedResult) {
-        setAnalysisResultState(JSON.parse(storedResult));
-      }
+      analysisResult = JSON.parse(storedResult);
     } catch {
-      // Ignore parse errors
+      localStorage.removeItem("fitnesslab_result");
     }
-    setHydrated(true);
-  }, []);
+  }
+
+  return {
+    isLoggedIn: Boolean(storedEmail && storedToken),
+    userEmail: storedEmail,
+    accessToken: storedToken,
+    analysisResult,
+  };
+}
+
+function subscribeToHydration() {
+  return () => {};
+}
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const hydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => readStoredState().isLoggedIn);
+  const [userEmail, setUserEmail] = useState(() => readStoredState().userEmail);
+  const [accessToken, setAccessToken] = useState(() => readStoredState().accessToken);
+  const [analysisResult, setAnalysisResultState] = useState<AnalyzeResponse | null>(
+    () => readStoredState().analysisResult
+  );
 
   const setLoggedIn = (email: string, token: string) => {
     setIsLoggedIn(true);
@@ -75,7 +85,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("fitnesslab_result");
   };
 
-  const setAnalysisResult = (data: AnalysisResult) => {
+  const setAnalysisResult = (data: AnalyzeResponse) => {
     setAnalysisResultState(data);
     localStorage.setItem("fitnesslab_result", JSON.stringify(data));
   };
@@ -85,7 +95,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("fitnesslab_result");
   };
 
-  // Prevent SSR hydration mismatch
   if (!hydrated) {
     return null;
   }
@@ -108,7 +117,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/* ── Hook ── */
 export function useAppContext() {
   const context = useContext(AppContext);
   if (!context) {

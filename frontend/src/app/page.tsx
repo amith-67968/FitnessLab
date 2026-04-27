@@ -8,37 +8,32 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      {/* Decorative orbs */}
       <div className="orb orb-1" />
       <div className="orb orb-2" />
       <div className="orb orb-3" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-        {/* Badge */}
         <div className="fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8">
           <div className="pulse-dot" />
           <span className="text-sm text-white/70 font-medium">
-            AI-Powered Fitness Analysis
+            Formula-Based Fitness Analysis
           </span>
         </div>
 
-        {/* Heading */}
         <h1 className="fade-in text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight tracking-tight mb-6">
-          <span className="text-white">Your AI</span>
+          <span className="text-white">Your Smart</span>
           <br />
           <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             Fitness Planner
           </span>
         </h1>
 
-        {/* Subtitle */}
         <p className="fade-in stagger-2 text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Get a personalized fitness blueprint powered by AI. Analyze your BMI,
-          receive tailored diet plans, workout routines, and actionable health
-          insights — all in seconds.
+          Get a personalized fitness blueprint from clear formulas. Analyze
+          your BMI, receive nutrition targets, and follow an 8-week exercise
+          routine in seconds.
         </p>
 
-        {/* CTA */}
         <div className="fade-in stagger-3 flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             id="cta-get-started"
@@ -64,12 +59,11 @@ export default function LandingPage() {
           <span className="text-sm text-white/40">No credit card required</span>
         </div>
 
-        {/* Stats */}
         <div className="fade-in stagger-4 mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto">
           {[
-            { value: "10K+", label: "Users" },
-            { value: "98%", label: "Accuracy" },
-            { value: "24/7", label: "AI Support" },
+            { value: "3", label: "Inputs" },
+            { value: "5", label: "Macros" },
+            { value: "8 wk", label: "Plan" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
@@ -80,7 +74,6 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Feature Cards */}
         <div className="fade-in stagger-5 mt-20 grid sm:grid-cols-3 gap-5">
           {[
             {
@@ -90,7 +83,7 @@ export default function LandingPage() {
                 </svg>
               ),
               title: "BMI Analysis",
-              desc: "Instant body mass index calculation with health category insights",
+              desc: "Instant body mass index calculation with a simple health category",
             },
             {
               icon: (
@@ -98,8 +91,8 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265z" />
                 </svg>
               ),
-              title: "Diet Plans",
-              desc: "AI-curated meal plans tailored to your nutritional needs and goals",
+              title: "Nutrition Targets",
+              desc: "Calories, protein, fibre, fats, and carbs calculated from your metrics",
             },
             {
               icon: (
@@ -107,8 +100,8 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                 </svg>
               ),
-              title: "Workout Plans",
-              desc: "Personalized exercise routines with progressive timelines",
+              title: "Exercise Plan",
+              desc: "A structured 8-week routine based on your BMI category",
             },
           ].map((card) => (
             <div

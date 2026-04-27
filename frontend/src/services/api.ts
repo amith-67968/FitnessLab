@@ -7,10 +7,9 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 30000, // 30s timeout for AI processing
+  timeout: 30000,
 });
 
-/* ── Request interceptor: attach Bearer token ── */
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("fitnesslab_token");
   if (token) {
@@ -19,16 +18,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/* ── Response interceptor: handle 401 ── */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid — clear auth state
       localStorage.removeItem("fitnesslab_token");
       localStorage.removeItem("fitnesslab_email");
       localStorage.removeItem("fitnesslab_result");
-      // Only redirect if we're in the browser
       if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
         window.location.href = "/auth";
       }
@@ -37,14 +33,56 @@ api.interceptors.response.use(
   }
 );
 
-/* ── Types ── */
+export type Gender = "male" | "female";
+export type Category = "skinny" | "fit" | "fat";
 
 export interface AnalyzePayload {
   height: number;
   weight: number;
+  gender: Gender;
+}
+
+export interface NutritionPlan {
   calories: number;
   protein: number;
   fibre: number;
+  fats: number;
+  carbs: number;
+}
+
+export interface NutritionImages {
+  calories: string;
+  protein: string;
+  fibre: string;
+  fats: string;
+  carbs: string;
+}
+
+export interface WorkoutExercise {
+  name: string;
+  sets: string;
+  notes: string;
+}
+
+export interface WorkoutWeek {
+  week: string;
+  focus: string;
+  details: string;
+  exercises: WorkoutExercise[];
+  images: string[];
+}
+
+export interface AnalyzeResponse {
+  bmi: number;
+  category: Category;
+  nutrition: NutritionPlan;
+  nutrition_images: NutritionImages;
+}
+
+export interface WorkoutResponse {
+  title: string;
+  description: string;
+  weeks: WorkoutWeek[];
 }
 
 export interface AuthResponse {
@@ -53,8 +91,6 @@ export interface AuthResponse {
   token_type: string;
   user: Record<string, unknown>;
 }
-
-/* ── Auth API ── */
 
 export async function signupUser(email: string, password: string): Promise<AuthResponse> {
   const response = await api.post<AuthResponse>("/auth/signup", { email, password });
@@ -70,10 +106,13 @@ export async function logoutUser(): Promise<void> {
   await api.post("/auth/logout");
 }
 
-/* ── Analyze API ── */
+export async function analyzeBody(payload: AnalyzePayload): Promise<AnalyzeResponse> {
+  const response = await api.post<AnalyzeResponse>("/analyze", payload);
+  return response.data;
+}
 
-export async function analyzeBody(payload: AnalyzePayload) {
-  const response = await api.post("/analyze", payload);
+export async function getWorkoutPlan(category: Category): Promise<WorkoutResponse> {
+  const response = await api.get<WorkoutResponse>(`/workout/${category}`);
   return response.data;
 }
 

@@ -44,7 +44,7 @@ export default function Navbar() {
             </svg>
           </div>
           <span className="font-bold text-lg tracking-tight text-white">
-            AI Fitness
+            FitnessLab
           </span>
         </Link>
 

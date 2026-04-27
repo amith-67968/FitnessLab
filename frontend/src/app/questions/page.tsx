@@ -1,38 +1,38 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
 import { analyzeBody } from "@/services/api";
 
+type Gender = "male" | "female";
+
 interface FormData {
   height: string;
   weight: string;
-  calories: string;
-  protein: string;
-  fibre: string;
+  gender: Gender | "";
 }
 
 interface FormErrors {
   height?: string;
   weight?: string;
-  calories?: string;
-  protein?: string;
-  fibre?: string;
+  gender?: string;
 }
 
 const fields = [
-  { key: "height", label: "Height", unit: "cm", placeholder: "175", required: true },
-  { key: "weight", label: "Weight", unit: "kg", placeholder: "70", required: true },
-  { key: "calories", label: "Daily Calories", unit: "kcal", placeholder: "2000", required: false },
-  { key: "protein", label: "Protein Intake", unit: "g", placeholder: "50", required: false },
-  { key: "fibre", label: "Fibre Intake", unit: "g", placeholder: "25", required: false },
+  { key: "height", label: "Height", unit: "cm", placeholder: "175" },
+  { key: "weight", label: "Weight", unit: "kg", placeholder: "70" },
 ] as const;
+
+const genderOptions: Array<{ value: Gender; label: string }> = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
 
 export default function QuestionsPage() {
   const router = useRouter();
   const { isLoggedIn, setAnalysisResult } = useAppContext();
-  const [form, setForm] = useState<FormData>({ height: "", weight: "", calories: "", protein: "", fibre: "" });
+  const [form, setForm] = useState<FormData>({ height: "", weight: "", gender: "" });
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -43,27 +43,44 @@ export default function QuestionsPage() {
   }, [isLoggedIn, router]);
 
   const validate = (): boolean => {
-    const e: FormErrors = {};
-    if (!form.height.trim()) e.height = "Height is required";
-    else if (isNaN(Number(form.height)) || Number(form.height) <= 0) e.height = "Must be a positive number";
-    if (!form.weight.trim()) e.weight = "Weight is required";
-    else if (isNaN(Number(form.weight)) || Number(form.weight) <= 0) e.weight = "Must be a positive number";
-    for (const f of ["calories", "protein", "fibre"] as const) {
-      if (form[f].trim() && (isNaN(Number(form[f])) || Number(form[f]) < 0)) e[f] = "Must be a valid number";
+    const nextErrors: FormErrors = {};
+
+    if (!form.height.trim()) {
+      nextErrors.height = "Height is required";
+    } else if (Number.isNaN(Number(form.height)) || Number(form.height) <= 0) {
+      nextErrors.height = "Must be a positive number";
     }
-    setErrors(e);
-    return Object.keys(e).length === 0;
+
+    if (!form.weight.trim()) {
+      nextErrors.weight = "Weight is required";
+    } else if (Number.isNaN(Number(form.weight)) || Number(form.weight) <= 0) {
+      nextErrors.weight = "Must be a positive number";
+    }
+
+    if (!form.gender) {
+      nextErrors.gender = "Gender is required";
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  const handleChange = (key: keyof FormData, value: string) => {
-    setForm((p) => ({ ...p, [key]: value }));
-    if (errors[key]) setErrors((p) => ({ ...p, [key]: undefined }));
+  const handleTextChange = (key: "height" | "weight", value: string) => {
+    setForm((previous) => ({ ...previous, [key]: value }));
+    if (errors[key]) setErrors((previous) => ({ ...previous, [key]: undefined }));
     if (apiError) setApiError("");
   };
 
-  const handleSubmit = async (ev: React.FormEvent) => {
-    ev.preventDefault();
-    if (!validate() || loading || submittedRef.current) return;
+  const handleGenderChange = (gender: Gender) => {
+    setForm((previous) => ({ ...previous, gender }));
+    if (errors.gender) setErrors((previous) => ({ ...previous, gender: undefined }));
+    if (apiError) setApiError("");
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!validate() || loading || submittedRef.current || !form.gender) return;
+
     setLoading(true);
     setApiError("");
     submittedRef.current = true;
@@ -72,17 +89,15 @@ export default function QuestionsPage() {
       const payload = {
         height: Number(form.height),
         weight: Number(form.weight),
-        calories: form.calories ? Number(form.calories) : 0,
-        protein: form.protein ? Number(form.protein) : 0,
-        fibre: form.fibre ? Number(form.fibre) : 0,
+        gender: form.gender,
       };
       const data = await analyzeBody(payload);
       if (!data) throw new Error("Empty response from server");
       setAnalysisResult(data);
       router.push("/result");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
-      setApiError(msg);
+      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      setApiError(message);
       submittedRef.current = false;
     } finally {
       setLoading(false);
@@ -98,7 +113,7 @@ export default function QuestionsPage() {
       <div className="relative z-10 w-full max-w-lg">
         <div className="text-center mb-8 fade-in">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">Body Analysis</h1>
-          <p className="text-white/50">Enter your details for a personalized AI fitness plan</p>
+          <p className="text-white/50">Enter your details for a formula-based fitness plan</p>
         </div>
 
         <div className="glass-card p-8 fade-in stagger-2">
@@ -112,23 +127,63 @@ export default function QuestionsPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {fields.map((f) => (
-              <div key={f.key}>
-                <label htmlFor={`q-${f.key}`} className="flex items-center justify-between text-sm font-medium text-white/70 mb-2">
-                  <span>{f.label} {f.required && <span className="text-red-400">*</span>}</span>
-                  <span className="text-xs text-white/30">{f.unit}</span>
+            {fields.map((field) => (
+              <div key={field.key}>
+                <label htmlFor={`q-${field.key}`} className="flex items-center justify-between text-sm font-medium text-white/70 mb-2">
+                  <span>
+                    {field.label} <span className="text-red-400">*</span>
+                  </span>
+                  <span className="text-xs text-white/30">{field.unit}</span>
                 </label>
-                <input id={`q-${f.key}`} type="text" inputMode="decimal" value={form[f.key as keyof FormData]}
-                  onChange={(e) => handleChange(f.key as keyof FormData, e.target.value)}
-                  placeholder={f.placeholder} className={`input-field ${errors[f.key as keyof FormErrors] ? "error" : ""}`} />
-                {errors[f.key as keyof FormErrors] && (
-                  <p className="mt-1.5 text-xs text-red-400">{errors[f.key as keyof FormErrors]}</p>
+                <input
+                  id={`q-${field.key}`}
+                  type="text"
+                  inputMode="decimal"
+                  value={form[field.key]}
+                  onChange={(event) => handleTextChange(field.key, event.target.value)}
+                  placeholder={field.placeholder}
+                  className={`input-field ${errors[field.key] ? "error" : ""}`}
+                />
+                {errors[field.key] && (
+                  <p className="mt-1.5 text-xs text-red-400">{errors[field.key]}</p>
                 )}
               </div>
             ))}
 
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2">
+                Gender <span className="text-red-400">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {genderOptions.map((option) => {
+                  const selected = form.gender === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => handleGenderChange(option.value)}
+                      className={`py-3 rounded-xl border text-sm font-semibold transition-all ${
+                        selected
+                          ? "bg-indigo-500/25 border-indigo-400 text-white shadow-lg shadow-indigo-500/20"
+                          : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {errors.gender && <p className="mt-1.5 text-xs text-red-400">{errors.gender}</p>}
+            </div>
+
             <button id="questions-submit" type="submit" disabled={loading} className="btn-glow w-full flex items-center justify-center gap-2 mt-4">
-              {loading ? (<><div className="spinner" /><span>Analyzing…</span></>) : (
+              {loading ? (
+                <>
+                  <div className="spinner" />
+                  <span>Analyzing...</span>
+                </>
+              ) : (
                 <>
                   Analyze My Body
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
