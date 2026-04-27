@@ -13,11 +13,11 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from dependencies import get_current_user
-from models import AnalyzeRequest, AnalyzeResponse, Category, WorkoutResponse
+from models import AnalyzeRequest, AnalyzeResponse
 from routes.auth import router as auth_router
 from services.bmi import calculate_bmi, classify_bmi
-from services.exercise import get_workout_plan
-from services.nutrition import get_full_nutrition, get_nutrition_images
+from services.exercise import get_exercise_plan
+from services.nutrition import get_full_nutrition
 
 load_dotenv()
 
@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="FitnessLab API",
-    description="A formula-based fitness planner with structured nutrition and workout output.",
-    version="2.2.0",
+    description="A formula-based fitness planner with structured nutrition and exercise output.",
+    version="2.1.0",
 )
 
 app.add_middleware(
@@ -54,7 +54,7 @@ app.include_router(auth_router)
 @app.get("/", tags=["health"])
 async def root():
     """Health-check endpoint."""
-    return {"status": "ok", "service": "FitnessLab API", "version": "2.2.0"}
+    return {"status": "ok", "service": "FitnessLab API", "version": "2.1.0"}
 
 
 @app.post("/analyze", response_model=AnalyzeResponse, tags=["analyze"])
@@ -62,27 +62,17 @@ async def analyze(
     body: AnalyzeRequest,
     user: dict = Depends(get_current_user),
 ):
-    """Analyze user metrics and return BMI plus nutrition targets."""
+    """Analyze user metrics and return a structured fitness plan."""
     logger.info("Authenticated user: %s", user.get("email", "unknown"))
 
     bmi = calculate_bmi(body.weight, body.height)
     category = classify_bmi(bmi)
     nutrition = get_full_nutrition(body.weight, body.gender, category)
-    nutrition_images = await get_nutrition_images()
+    exercise_plan = get_exercise_plan(category)
 
-    return {
-        "bmi": bmi,
-        "category": category,
-        "nutrition": nutrition,
-        "nutrition_images": nutrition_images,
-    }
-
-
-@app.get("/workout/{category}", response_model=WorkoutResponse, tags=["workout"])
-async def workout(
-    category: Category,
-    user: dict = Depends(get_current_user),
-):
-    """Return the detailed 8-week workout plan for a BMI category."""
-    logger.info("Workout plan requested by %s for %s", user.get("email", "unknown"), category)
-    return await get_workout_plan(category)
+    return AnalyzeResponse(
+        bmi=bmi,
+        category=category,
+        nutrition=nutrition,
+        exercise_plan=exercise_plan,
+    )
