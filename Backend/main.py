@@ -13,11 +13,11 @@ from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from dependencies import get_current_user
-from models import AnalyzeRequest, AnalyzeResponse
+from models import AnalyzeRequest, AnalyzeResponse, Category, WorkoutResponse
 from routes.auth import router as auth_router
 from services.bmi import calculate_bmi, classify_bmi
-from services.exercise import get_exercise_plan
-from services.nutrition import get_full_nutrition
+from services.exercise import get_workout_plan
+from services.nutrition import get_full_nutrition, get_nutrition_images
 
 load_dotenv()
 
@@ -68,11 +68,17 @@ async def analyze(
     bmi = calculate_bmi(body.weight, body.height)
     category = classify_bmi(bmi)
     nutrition = get_full_nutrition(body.weight, body.gender, category)
-    exercise_plan = get_exercise_plan(category)
+    nutrition_images = await get_nutrition_images()
 
     return AnalyzeResponse(
         bmi=bmi,
         category=category,
         nutrition=nutrition,
-        exercise_plan=exercise_plan,
+        nutrition_images=nutrition_images,
     )
+
+
+@app.get("/workout/{category}", response_model=WorkoutResponse, tags=["workout"])
+async def workout(category: Category):
+    """Return the 8-week workout plan for a BMI category."""
+    return await get_workout_plan(category)
