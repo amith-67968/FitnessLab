@@ -1,30 +1,32 @@
-"""BMI calculation service."""
+"""BMI calculation and classification."""
 
 from __future__ import annotations
 
 
-def calculate_bmi(weight_kg: float, height_cm: float) -> float:
-    """Return BMI rounded to 2 decimal places.
+def calculate_bmi(weight: float, height: float) -> float:
+    """Return BMI rounded to 1 decimal place.
 
-    Formula: weight / (height_in_metres ** 2)
+    Parameters
+    ----------
+    weight : float
+        Weight in kilograms.
+    height : float
+        Height in centimetres.
     """
-    height_m = height_cm / 100.0
-    bmi = weight_kg / (height_m ** 2)
-    return round(bmi, 2)
+    height_m = height / 100
+    return round(weight / (height_m ** 2), 1)
 
 
 def classify_bmi(bmi: float) -> str:
-    """Map a BMI value to a human-readable category.
+    """Classify BMI into a category.
 
-    Categories
-    ----------
-    * < 18.5  → "skinny"
-    * 18.5–24.9 → "fit"
-    * ≥ 25    → "fat"
+    Returns
+    -------
+    str
+        One of ``"skinny"``, ``"fit"``, or ``"fat"``.
     """
     if bmi < 18.5:
         return "skinny"
-    elif bmi <= 24.9:
+    if bmi < 25:
         return "fit"
-    else:
-        return "fat"
+    return "fat"

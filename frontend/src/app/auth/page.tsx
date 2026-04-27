@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
+import { loginUser, signupUser } from "@/services/api";
+import axios from "axios";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [apiError, setApiError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   React.useEffect(() => {
@@ -31,9 +34,42 @@ export default function AuthPage() {
     ev.preventDefault();
     if (!validate() || submitting) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setLoggedIn(email);
-    router.push("/questions");
+    setApiError("");
+
+    try {
+      const authFn = mode === "login" ? loginUser : signupUser;
+      const data = await authFn(email, password);
+
+      const token = data.access_token;
+      const userEmail =
+        (data.user as Record<string, unknown>)?.email as string || email;
+
+      if (!token) {
+        // Supabase may return empty token for unconfirmed signups
+        setApiError(
+          mode === "signup"
+            ? "Account created! Check your email to confirm, then log in."
+            : "Login succeeded but no token was returned."
+        );
+        if (mode === "signup") setMode("login");
+        return;
+      }
+
+      setLoggedIn(userEmail, token);
+      router.push("/questions");
+    } catch (err: unknown) {
+      let msg = "Something went wrong. Please try again.";
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        if (typeof detail === "string") msg = detail;
+        else if (Array.isArray(detail) && detail.length > 0) msg = detail[0]?.msg || msg;
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setApiError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -54,12 +90,21 @@ export default function AuthPage() {
 
           <div className="flex rounded-xl bg-white/5 p-1 mb-8">
             {(["login", "signup"] as const).map((m) => (
-              <button key={m} onClick={() => { setMode(m); setErrors({}); }}
+              <button key={m} onClick={() => { setMode(m); setErrors({}); setApiError(""); }}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${mode === m ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg" : "text-white/50 hover:text-white/70"}`}>
                 {m === "login" ? "Login" : "Sign Up"}
               </button>
             ))}
           </div>
+
+          {apiError && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-3">
+              <svg className="w-5 h-5 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+              </svg>
+              <span>{apiError}</span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

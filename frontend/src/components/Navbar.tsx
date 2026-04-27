@@ -2,14 +2,26 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
+import { logoutUser } from "@/services/api";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isLoggedIn, userEmail, logout } = useAppContext();
 
   const isActive = (path: string) => pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // Even if the API call fails, still log out locally
+    }
+    logout();
+    router.push("/");
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-card rounded-none border-t-0 border-x-0">
@@ -68,7 +80,7 @@ export default function Navbar() {
                 </span>
               </div>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="text-sm text-white/50 hover:text-red-400 transition-colors"
               >
                 Logout

@@ -19,8 +19,9 @@ export interface AnalysisResult {
 interface AppState {
   isLoggedIn: boolean;
   userEmail: string;
+  accessToken: string;
   analysisResult: AnalysisResult | null;
-  setLoggedIn: (email: string) => void;
+  setLoggedIn: (email: string, token: string) => void;
   logout: () => void;
   setAnalysisResult: (data: AnalysisResult) => void;
   clearResult: () => void;
@@ -32,6 +33,7 @@ const AppContext = createContext<AppState | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [accessToken, setAccessToken] = useState("");
   const [analysisResult, setAnalysisResultState] = useState<AnalysisResult | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -39,10 +41,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const storedEmail = localStorage.getItem("fitnesslab_email");
+      const storedToken = localStorage.getItem("fitnesslab_token");
       const storedResult = localStorage.getItem("fitnesslab_result");
-      if (storedEmail) {
+      if (storedEmail && storedToken) {
         setIsLoggedIn(true);
         setUserEmail(storedEmail);
+        setAccessToken(storedToken);
       }
       if (storedResult) {
         setAnalysisResultState(JSON.parse(storedResult));
@@ -53,17 +57,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setHydrated(true);
   }, []);
 
-  const setLoggedIn = (email: string) => {
+  const setLoggedIn = (email: string, token: string) => {
     setIsLoggedIn(true);
     setUserEmail(email);
+    setAccessToken(token);
     localStorage.setItem("fitnesslab_email", email);
+    localStorage.setItem("fitnesslab_token", token);
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     setUserEmail("");
+    setAccessToken("");
     setAnalysisResultState(null);
     localStorage.removeItem("fitnesslab_email");
+    localStorage.removeItem("fitnesslab_token");
     localStorage.removeItem("fitnesslab_result");
   };
 
@@ -87,6 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         isLoggedIn,
         userEmail,
+        accessToken,
         analysisResult,
         setLoggedIn,
         logout,

@@ -1,49 +1,78 @@
-"""Nutrition feedback service.
+"""Formula-based nutrition calculations.
 
-Evaluates daily intake values and returns actionable suggestions.
+All values are derived from weight, gender, and BMI category — no AI involved.
 """
 
 from __future__ import annotations
 
+from typing import Literal
 
-def evaluate_nutrition(
-    calories: float,
-    protein: float,
-    fibre: float,
-    category: str,
-) -> list[str]:
-    """Return a list of plain-English nutrition tips.
 
-    Parameters
-    ----------
-    calories : float  – daily calorie intake (kcal)
-    protein  : float  – daily protein intake (g)
-    fibre    : float  – daily fibre intake (g)
-    category : str    – BMI category ("skinny" | "fit" | "fat")
+def calculate_calories(
+    weight: float,
+    gender: Literal["male", "female"],
+    category: Literal["skinny", "fit", "fat"],
+) -> int:
+    """Daily calorie target.
+
+    Base: male → weight × 24, female → weight × 22.
+    Adjusted: skinny +300, fit +0, fat −300.
     """
-    feedback: list[str] = []
+    base = weight * (24 if gender == "male" else 22)
+    adjustment = {"skinny": 300, "fit": 0, "fat": -300}
+    return round(base + adjustment[category])
 
-    # ── Protein ──────────────────────────────────────────────────────────
-    if protein < 50:
-        feedback.append("Increase protein intake")
 
-    # ── Fibre ────────────────────────────────────────────────────────────
-    if fibre < 20:
-        feedback.append("Increase fibre intake")
+def calculate_protein(
+    weight: float,
+    category: Literal["skinny", "fit", "fat"],
+) -> int:
+    """Daily protein target in grams.
 
-    # ── Calories (context-aware) ─────────────────────────────────────────
-    if category == "fat" and calories > 2200:
-        feedback.append("Reduce calorie intake")
-    elif category == "fit" and calories > 2500:
-        feedback.append("Reduce calorie intake")
-    elif category == "skinny" and calories < 1800:
-        feedback.append("Increase calorie intake")
-    elif calories < 1200:
-        feedback.append("Increase calorie intake")
-    elif calories > 3000:
-        feedback.append("Reduce calorie intake")
+    skinny → 1.5 × weight, fit → 1.0 × weight, fat → 1.2 × weight.
+    """
+    multiplier = {"skinny": 1.5, "fit": 1.0, "fat": 1.2}
+    return round(weight * multiplier[category])
 
-    if not feedback:
-        feedback.append("Your nutrition looks well-balanced — keep it up!")
 
-    return feedback
+def calculate_fibre(gender: Literal["male", "female"]) -> int:
+    """Daily fibre target in grams.
+
+    male → 30 g, female → 25 g.
+    """
+    return 30 if gender == "male" else 25
+
+
+def calculate_fats(calories: int) -> int:
+    """Daily fat target in grams (25 % of calories ÷ 9)."""
+    return round(calories * 0.25 / 9)
+
+
+def calculate_carbs(calories: int, protein: int, fats: int) -> int:
+    """Daily carb target in grams.
+
+    Remaining calories after protein (4 kcal/g) and fats (9 kcal/g), divided by 4.
+    """
+    remaining = calories - (protein * 4) - (fats * 9)
+    return round(max(remaining, 0) / 4)
+
+
+def get_full_nutrition(
+    weight: float,
+    gender: Literal["male", "female"],
+    category: Literal["skinny", "fit", "fat"],
+) -> dict:
+    """Return all macro targets as a dict ready for the API response."""
+    calories = calculate_calories(weight, gender, category)
+    protein = calculate_protein(weight, category)
+    fibre = calculate_fibre(gender)
+    fats = calculate_fats(calories)
+    carbs = calculate_carbs(calories, protein, fats)
+
+    return {
+        "calories": calories,
+        "protein": protein,
+        "fibre": fibre,
+        "fats": fats,
+        "carbs": carbs,
+    }
