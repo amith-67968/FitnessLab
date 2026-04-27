@@ -2,121 +2,92 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { useAppContext } from "@/context/AppContext";
+
+const heroStats = [
+  { value: "BMI-led", label: "Precise classification" },
+  { value: "5 macros", label: "Daily nutrition targets" },
+  { value: "8 weeks", label: "Structured workout flow" },
+];
 
 export default function LandingPage() {
   const router = useRouter();
+  const { isLoggedIn } = useAppContext();
+
+  const handlePrimaryAction = () => {
+    router.push(isLoggedIn ? "/questions" : "/auth");
+  };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      <div className="orb orb-1" />
-      <div className="orb orb-2" />
-      <div className="orb orb-3" />
+    <div className="landing-shell min-h-screen overflow-hidden pt-16 lg:h-screen lg:pt-16">
+      <div className="landing-backdrop" />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-        <div className="fade-in inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8">
-          <div className="pulse-dot" />
-          <span className="text-sm text-white/70 font-medium">
-            Formula-Based Fitness Analysis
-          </span>
-        </div>
+      <section className="relative w-full overflow-hidden border-y border-slate-200 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] lg:h-[calc(100vh-4rem)]">
+        <div className="absolute inset-y-0 right-[38%] hidden w-px bg-slate-200/70 lg:block" />
+        <div className="absolute left-1/3 top-0 h-full w-80 -translate-x-1/2 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.12),_transparent_72%)]" />
 
-        <h1 className="fade-in text-5xl sm:text-6xl md:text-7xl font-extrabold leading-tight tracking-tight mb-6">
-          <span className="text-white">Your Smart</span>
-          <br />
-          <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Fitness Planner
-          </span>
-        </h1>
+        <div className="grid min-h-[680px] lg:h-full lg:grid-cols-[1.18fr_0.82fr]">
+          <div className="relative flex items-center px-8 py-10 sm:px-12 lg:px-16 lg:py-12">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Intelligent Performance
+              </div>
 
-        <p className="fade-in stagger-2 text-lg sm:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Get a personalized fitness blueprint from clear formulas. Analyze
-          your BMI, receive nutrition targets, and follow an 8-week exercise
-          routine in seconds.
-        </p>
+              <h1 className="mt-6 max-w-xl text-5xl font-black leading-[0.9] tracking-[-0.06em] text-slate-950 sm:text-6xl lg:text-[5.75rem]">
+                <span className="block">Your AI</span>
+                <span className="block text-blue-600">Fitness Planner.</span>
+              </h1>
 
-        <div className="fade-in stagger-3 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            id="cta-get-started"
-            onClick={() => router.push("/auth")}
-            className="btn-glow text-lg px-10 py-4"
-          >
-            Get Started
-            <svg
-              className="inline-block ml-2 w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              <p className="mt-6 max-w-[44rem] text-lg leading-8 text-slate-600 sm:text-xl">
+                Where scientific precision meets elite performance. Experience
+                the next evolution of human potential driven by hyper-personalized
+                data.
+              </p>
+
+              <div className="mt-9 flex items-center">
+                <button
+                  id="cta-begin-analysis"
+                  onClick={handlePrimaryAction}
+                  className="inline-flex min-w-[220px] items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-lg font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700"
+                >
+                  Begin Analysis
+                </button>
+              </div>
+
+              <div className="mt-10 grid gap-4 sm:grid-cols-3">
+                {heroStats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl border border-slate-200 bg-slate-50/70 px-5 py-4"
+                  >
+                    <div className="text-lg font-bold text-slate-950">{stat.value}</div>
+                    <div className="mt-1 text-sm leading-5 text-slate-500">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex items-center justify-center px-8 py-8 sm:px-12 lg:px-10 lg:py-10">
+            <div className="hero-visual-frame relative w-full max-w-[620px] overflow-visible rounded-[28px] bg-slate-950 shadow-[0_35px_70px_rgba(15,23,42,0.28)]">
+              <div
+                className="hero-athlete-image h-[500px] w-full rounded-[28px] bg-cover bg-center sm:h-[560px] lg:h-[min(68vh,780px)]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.2)), url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80')",
+                }}
               />
-            </svg>
-          </button>
 
-          <span className="text-sm text-white/40">No credit card required</span>
-        </div>
-
-        <div className="fade-in stagger-4 mt-20 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-          {[
-            { value: "3", label: "Inputs" },
-            { value: "5", label: "Macros" },
-            { value: "8 wk", label: "Plan" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                {stat.value}
+              <div className="absolute inset-x-6 bottom-5 rounded-2xl bg-white/96 p-5 shadow-[0_16px_36px_rgba(15,23,42,0.18)] backdrop-blur">
+                <div className="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-700">
+                  <span className="h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_0_6px_rgba(74,222,128,0.16)]" />
+                  Live AI Feedback Active
+                </div>
               </div>
-              <div className="text-sm text-white/40 mt-1">{stat.label}</div>
             </div>
-          ))}
+          </div>
         </div>
-
-        <div className="fade-in stagger-5 mt-20 grid sm:grid-cols-3 gap-5">
-          {[
-            {
-              icon: (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a3.422 3.422 0 01-4.83.006l-.17-.164a2.1 2.1 0 00-2.96 0l-2.47 2.47" />
-                </svg>
-              ),
-              title: "BMI Analysis",
-              desc: "Instant body mass index calculation with a simple health category",
-            },
-            {
-              icon: (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265z" />
-                </svg>
-              ),
-              title: "Nutrition Targets",
-              desc: "Calories, protein, fibre, fats, and carbs calculated from your metrics",
-            },
-            {
-              icon: (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                </svg>
-              ),
-              title: "Exercise Plan",
-              desc: "A structured 8-week routine based on your BMI category",
-            },
-          ].map((card) => (
-            <div
-              key={card.title}
-              className="glass-card p-6 text-left hover:border-indigo-500/30 transition-all duration-300 group"
-            >
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
-                {card.icon}
-              </div>
-              <h3 className="text-white font-semibold mb-2">{card.title}</h3>
-              <p className="text-sm text-white/50 leading-relaxed">{card.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

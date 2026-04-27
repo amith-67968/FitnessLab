@@ -5,30 +5,59 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppContext } from "@/context/AppContext";
-import ResultCard from "@/components/ResultCard";
 import type { Category, NutritionImages } from "@/services/api";
 
-const NutritionIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-function getCategoryStyle(category?: string) {
-  if (category === "fit") return { color: "text-emerald-400", bg: "bg-emerald-500/15 border-emerald-500/25" };
-  if (category === "skinny") return { color: "text-amber-400", bg: "bg-amber-500/15 border-amber-500/25" };
-  return { color: "text-rose-400", bg: "bg-rose-500/15 border-rose-500/25" };
+function getCategoryAccent(category?: string) {
+  if (category === "fit") {
+    return {
+      tone: "text-emerald-600",
+      ring: "#16a34a",
+      pill: "bg-emerald-50 text-emerald-700",
+    };
+  }
+  if (category === "skinny") {
+    return {
+      tone: "text-amber-600",
+      ring: "#d97706",
+      pill: "bg-amber-50 text-amber-700",
+    };
+  }
+  return {
+    tone: "text-red-600",
+    ring: "#c81e1e",
+    pill: "bg-red-50 text-red-700",
+  };
 }
 
 function getCategorySummary(bmi?: number) {
   if (bmi == null) return "";
-  if (bmi < 18.5) return "Your BMI is below the healthy range. Nutrition targets support healthy weight gain and recovery.";
-  if (bmi < 25) return "Your BMI is in the healthy range. Nutrition targets support a balanced routine and steady performance.";
-  return "Your BMI is above the healthy range. Nutrition targets support calorie control and consistent training.";
+  if (bmi < 18.5) {
+    return "Your Body Mass Index is below the healthy range. Nutrition guidance supports improved recovery and steady healthy weight gain.";
+  }
+  if (bmi < 25) {
+    return "Your Body Mass Index is in the healthy range. Nutrition guidance supports balanced energy, muscle maintenance, and performance.";
+  }
+  return "Your Body Mass Index is in the overweight range. This is based on standard formulas considering your height and weight.";
+}
+
+function getInsight(bmi?: number) {
+  if (bmi == null) return "";
+  if (bmi < 18.5) {
+    return "AI Insight: Emphasize calorie-dense whole foods and progressive strength training to support lean mass gains.";
+  }
+  if (bmi < 25) {
+    return "AI Insight: Maintain a balanced mix of protein, fibre, and steady activity to preserve your current composition.";
+  }
+  return "AI Insight: Prioritize high-volume fiber-rich foods to manage satiety while adhering to your calorie budget.";
 }
 
 function imageSrc(base64?: string) {
   return base64 ? `data:image/jpeg;base64,${base64}` : "";
+}
+
+function getRingProgress(bmi: number) {
+  const normalized = Math.min(Math.max(bmi, 0), 40);
+  return (normalized / 40) * 327;
 }
 
 export default function ResultPage() {
@@ -42,122 +71,208 @@ export default function ResultPage() {
   if (!analysisResult) return null;
 
   const { bmi, category, nutrition, nutrition_images: nutritionImages } = analysisResult;
-  const catStyle = getCategoryStyle(category);
-  const macros: Array<{ key: keyof NutritionImages; label: string; value?: number; unit: string }> = [
-    { key: "calories", label: "Calories", value: nutrition?.calories, unit: "kcal" },
+  const accent = getCategoryAccent(category);
+  const macros: Array<{
+    key: keyof NutritionImages;
+    label: string;
+    value?: number;
+    unit: string;
+  }> = [
     { key: "protein", label: "Protein", value: nutrition?.protein, unit: "g" },
     { key: "fibre", label: "Fibre", value: nutrition?.fibre, unit: "g" },
     { key: "fats", label: "Fats", value: nutrition?.fats, unit: "g" },
     { key: "carbs", label: "Carbs", value: nutrition?.carbs, unit: "g" },
   ];
 
+  const caloriesImage = imageSrc(nutritionImages?.calories);
+
   const openWorkout = (selectedCategory: Category) => {
     router.push(`/workout?category=${selectedCategory}`);
   };
 
   return (
-    <div className="relative min-h-screen pt-24 pb-16 px-6 overflow-hidden">
-      <div className="orb orb-1" />
-      <div className="orb orb-2" />
+    <div className="landing-shell min-h-screen overflow-hidden pt-16 lg:h-screen lg:pt-16">
+      <div className="landing-backdrop" />
 
-      <div className="relative z-10 max-w-4xl mx-auto">
-        <div className="text-center mb-10 fade-in">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">Your Results</h1>
-          <p className="text-white/50">Formula-based BMI and nutrition targets</p>
-        </div>
+      <section className="relative flex min-h-[calc(100vh-4rem)] w-full flex-col border-y border-slate-200 bg-[#f8fafc] lg:h-[calc(100vh-4rem)]">
+        <div className="relative flex-1 overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mx-auto flex h-full w-full max-w-[1280px] flex-col">
+            <div className="shrink-0 pb-5">
+              <h1 className="text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl">
+                Your Results
+              </h1>
+              <p className="mt-1.5 text-base text-slate-500 sm:text-lg">
+                Formula-based BMI and nutrition targets
+              </p>
+            </div>
 
-        <div className="glass-card p-8 mb-8 fade-in stagger-1">
-          <div className="flex flex-col sm:flex-row items-center gap-8">
-            <div className="relative w-36 h-36 shrink-0">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  fill="none"
-                  stroke="url(#bmiGrad)"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeDasharray={`${Math.min((bmi || 0) / 40 * 327, 327)} 327`}
-                />
-                <defs>
-                  <linearGradient id="bmiGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#818cf8" />
-                    <stop offset="100%" stopColor="#c084fc" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-white">{bmi != null ? bmi.toFixed(1) : "--"}</span>
-                <span className="text-xs text-white/40 mt-1">BMI</span>
+            <div className="grid flex-1 gap-5 overflow-hidden lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="flex min-h-0 flex-col gap-4">
+                <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+                  <div className="flex justify-center">
+                    <div className="relative h-40 w-40">
+                      <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120">
+                        <circle
+                          cx="60"
+                          cy="60"
+                          r="52"
+                          fill="none"
+                          stroke="rgba(15,23,42,0.08)"
+                          strokeWidth="8"
+                        />
+                        <circle
+                          cx="60"
+                          cy="60"
+                          r="52"
+                          fill="none"
+                          stroke={accent.ring}
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeDasharray={`${getRingProgress(bmi)} 327`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-4xl font-black text-slate-950">{bmi.toFixed(1)}</span>
+                        <span className={`mt-2 rounded-full px-3 py-1 text-xs font-bold uppercase ${accent.pill}`}>
+                          {category}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 text-center">
+                    <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950">
+                      BMI Index
+                    </h2>
+                    <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-slate-500">
+                      {getCategorySummary(bmi)}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => openWorkout(category)}
+                  className="inline-flex justify-center rounded-2xl bg-blue-600 px-6 py-4 text-lg font-semibold text-white shadow-[0_16px_36px_rgba(37,99,235,0.24)] transition hover:bg-blue-700"
+                >
+                  View Workout Plan
+                </button>
+              </div>
+
+              <div className="min-h-0 rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+                <div className="flex items-center gap-3 border-l-4 border-blue-600 pl-4">
+                  <div className="text-blue-600">
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6v12m6-6H6"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-[-0.03em] text-slate-950">
+                    Nutrition Targets
+                  </h2>
+                </div>
+
+                <div className="mt-5 rounded-[18px] border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-slate-500">
+                        Daily Budget
+                      </div>
+                      <div className="mt-2 text-5xl font-black leading-none text-slate-950">
+                        {nutrition?.calories ?? "--"}
+                        <span className="ml-2 text-xl font-semibold text-slate-500">kcal</span>
+                      </div>
+                    </div>
+                    {caloriesImage && (
+                      <img
+                        src={caloriesImage}
+                        alt="Calories target"
+                        className="h-20 w-20 rounded-2xl object-cover shadow-md"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {macros.map((macro) => {
+                    const source = imageSrc(nutritionImages?.[macro.key]);
+                    return (
+                      <div
+                        key={macro.label}
+                        className="flex items-center gap-3 rounded-[16px] border border-slate-200 bg-white p-3"
+                      >
+                        {source ? (
+                          <img
+                            src={source}
+                            alt={`${macro.label} nutrition`}
+                            className="h-12 w-12 rounded-xl object-cover"
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-xl bg-slate-100" />
+                        )}
+                        <div>
+                          <div className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-slate-500">
+                            {macro.label}
+                          </div>
+                          <div className="mt-1 text-2xl font-bold leading-none text-slate-950">
+                            {macro.value ?? "--"}
+                            <span className="ml-1 text-base font-medium text-slate-500">
+                              {macro.unit}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 rounded-[18px] border-l-4 border-blue-600 bg-slate-50 px-4 py-3">
+                  <p className="text-sm leading-6 text-slate-600">{getInsight(bmi)}</p>
+                </div>
               </div>
             </div>
 
-            <div className="text-center sm:text-left flex-1">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold mb-3 capitalize ${catStyle.bg} ${catStyle.color}`}>
-                <div className="w-2 h-2 rounded-full bg-current" />
-                {category || "Unknown"}
-              </div>
-              <p className="text-white/60 leading-relaxed mb-5">{getCategorySummary(bmi)}</p>
+            <div className="mt-5 flex shrink-0 justify-center gap-4">
               <button
-                onClick={() => openWorkout(category)}
-                className="btn-glow inline-flex items-center justify-center gap-2 px-6"
+                onClick={() => {
+                  clearResult();
+                  router.push("/questions");
+                }}
+                className="rounded-2xl bg-blue-100 px-8 py-3.5 text-base font-medium text-slate-700 transition hover:bg-blue-200"
               >
-                View Workout Plan
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                Analyze Again
+              </button>
+              <button
+                onClick={() => router.push("/")}
+                className="rounded-2xl border border-slate-200 bg-white px-8 py-3.5 text-base font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Back to Home
               </button>
             </div>
           </div>
         </div>
 
-        <ResultCard title="Nutrition Targets" icon={<NutritionIcon />} className="mb-8 stagger-2">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {macros.map((macro) => {
-              const source = imageSrc(nutritionImages?.[macro.key]);
-              return (
-                <div key={macro.label} className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
-                  {source && (
-                    <img
-                      src={source}
-                      alt={`${macro.label} nutrition`}
-                      className="h-24 w-full object-cover"
-                    />
-                  )}
-                  <div className="p-4">
-                    <div className="text-xs uppercase text-white/40 mb-2">{macro.label}</div>
-                    <div className="text-2xl font-bold text-white">
-                      {macro.value ?? "--"}
-                      <span className="ml-1 text-sm font-medium text-white/40">{macro.unit}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        <div className="border-t border-slate-200 bg-white px-6 py-3 text-sm text-slate-500 sm:px-8 lg:px-10">
+          <div className="mx-auto flex max-w-[1280px] flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="font-semibold text-slate-800">Athletic Intelligence</div>
+            <div className="flex flex-wrap gap-5">
+              <span>Privacy Policy</span>
+              <span>Terms of Service</span>
+              <span>Support</span>
+              <span>Contact</span>
+            </div>
+            <div className="hidden lg:block">© 2024 Athletic Intelligence Precision Performance Data</div>
           </div>
-        </ResultCard>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 fade-in stagger-4">
-          <button
-            id="result-retry"
-            onClick={() => {
-              clearResult();
-              router.push("/questions");
-            }}
-            className="btn-glow px-8"
-          >
-            Analyze Again
-          </button>
-          <button
-            onClick={() => router.push("/")}
-            className="px-8 py-3.5 rounded-xl text-sm font-medium text-white/60 border border-white/10 hover:bg-white/5 transition-all"
-          >
-            Back to Home
-          </button>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
