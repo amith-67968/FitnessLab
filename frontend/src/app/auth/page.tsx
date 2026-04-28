@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { useAppContext } from "@/context/AppContext";
-import { loginUser, signupUser } from "@/services/api";
+import { getApiBase, loginUser, signupUser } from "@/services/api";
 
 export default function AuthPage() {
   const router = useRouter();
@@ -51,7 +51,7 @@ export default function AuthPage() {
       if (!token) {
         setApiError(
           mode === "signup"
-            ? "Account created. Check your email to confirm, then log in."
+            ? "Account created. Sign in to continue."
             : "Login succeeded but no token was returned."
         );
         if (mode === "signup") setMode("login");
@@ -63,9 +63,13 @@ export default function AuthPage() {
     } catch (err: unknown) {
       let message = "Something went wrong. Please try again.";
       if (axios.isAxiosError(err)) {
-        const detail = err.response?.data?.detail;
-        if (typeof detail === "string") message = detail;
-        else if (Array.isArray(detail) && detail.length > 0) message = detail[0]?.msg || message;
+        if (!err.response) {
+          message = `Backend API is unavailable at ${getApiBase()}.`;
+        } else {
+          const detail = err.response.data?.detail;
+          if (typeof detail === "string") message = detail;
+          else if (Array.isArray(detail) && detail.length > 0) message = detail[0]?.msg || message;
+        }
       } else if (err instanceof Error) {
         message = err.message;
       }

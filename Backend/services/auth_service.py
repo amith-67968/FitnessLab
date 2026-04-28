@@ -7,10 +7,14 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 
 import httpx
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def _get_config() -> tuple[str, str]:
@@ -148,4 +152,3 @@ async def sign_out(access_token: str) -> None:
         data = resp.json()
         error_msg = data.get("error_description") or data.get("msg") or data.get("message", "Logout failed")
         raise ValueError(error_msg)
-

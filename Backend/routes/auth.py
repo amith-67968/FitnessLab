@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from dependencies import get_current_user
-from services.auth_service import sign_up, sign_in, sign_out
+from services.auth_service import sign_in, sign_out, sign_up
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -56,6 +56,23 @@ async def signup(body: AuthRequest):
 
     session = data.get("session") or {}
     user = data.get("user") or {}
+
+    # When email confirmation is disabled, some Supabase responses may still
+    # omit the session payload on sign-up. Fall back to sign-in so the client
+    # receives tokens immediately after account creation.
+    if not session.get("access_token"):
+        try:
+            login_data = await sign_in(body.email, body.password)
+        except ValueError:
+            login_data = {}
+        except RuntimeError:
+            login_data = {}
+        else:
+            session = {
+                "access_token": login_data.get("access_token", ""),
+                "refresh_token": login_data.get("refresh_token"),
+            }
+            user = login_data.get("user") or user
 
     return AuthResponse(
         access_token=session.get("access_token", ""),

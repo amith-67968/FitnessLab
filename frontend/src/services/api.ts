@@ -1,9 +1,26 @@
 import axios from "axios";
 
-const API_BASE = "http://127.0.0.1:8000";
+export function getApiBase() {
+  const configuredBase = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (configuredBase) return configuredBase;
+
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:8080`;
+  }
+
+  return "http://127.0.0.1:8080";
+}
+
+function getClientApiBase() {
+  if (typeof window !== "undefined") {
+    return "/api/proxy";
+  }
+
+  return `${getApiBase()}`;
+}
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: getClientApiBase(),
   headers: {
     "Content-Type": "application/json",
   },
