@@ -24,9 +24,9 @@ export default function LandingPage() {
 
       <section className="relative w-full overflow-hidden border-y border-slate-200 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] lg:h-[calc(100vh-4rem)]">
         <div className="absolute inset-y-0 right-[38%] hidden w-px bg-slate-200/70 lg:block" />
-        <div className="absolute left-1/3 top-0 h-full w-80 -translate-x-1/2 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.12),_transparent_72%)]" />
+        <div className="absolute left-1/3 top-0 h-full w-80 -translate-x-1/2 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.12),transparent_72%)]" />
 
-        <div className="grid min-h-[680px] lg:h-full lg:grid-cols-[1.18fr_0.82fr]">
+        <div className="grid min-h-170 lg:h-full lg:grid-cols-[1.18fr_0.82fr]">
           <div className="relative flex items-center px-8 py-10 sm:px-12 lg:px-16 lg:py-12">
             <div className="max-w-2xl">
               <div className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -38,7 +38,7 @@ export default function LandingPage() {
                 <span className="block text-blue-600">Fitness Planner.</span>
               </h1>
 
-              <p className="mt-6 max-w-[44rem] text-lg leading-8 text-slate-600 sm:text-xl">
+              <p className="mt-6 max-w-176 text-lg leading-8 text-slate-600 sm:text-xl">
                 Where scientific precision meets elite performance. Experience
                 the next evolution of human potential driven by hyper-personalized
                 data.
@@ -48,7 +48,7 @@ export default function LandingPage() {
                 <button
                   id="cta-begin-analysis"
                   onClick={handlePrimaryAction}
-                  className="inline-flex min-w-[220px] items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-lg font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700"
+                  className="inline-flex min-w-55 items-center justify-center rounded-xl bg-blue-600 px-8 py-4 text-lg font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700"
                 >
                   Begin Analysis
                 </button>
@@ -69,9 +69,9 @@ export default function LandingPage() {
           </div>
 
           <div className="relative flex items-center justify-center px-8 py-8 sm:px-12 lg:px-10 lg:py-10">
-            <div className="hero-visual-frame relative w-full max-w-[620px] overflow-visible rounded-[28px] bg-slate-950 shadow-[0_35px_70px_rgba(15,23,42,0.28)]">
+            <div className="hero-visual-frame relative w-full max-w-155 overflow-visible rounded-[28px] bg-slate-950 shadow-[0_35px_70px_rgba(15,23,42,0.28)]">
               <div
-                className="hero-athlete-image h-[500px] w-full rounded-[28px] bg-cover bg-center sm:h-[560px] lg:h-[min(68vh,780px)]"
+                className="hero-athlete-image h-125 w-full rounded-[28px] bg-cover bg-center sm:h-140 lg:h-[min(68vh,780px)]"
                 style={{
                   backgroundImage:
                     "linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.2)), url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80')",
